@@ -1,14 +1,40 @@
+// pipeline {
+//     agent any
+//     stages {
+//         stage('Build') {
+//             steps {
+//                 sh '/opt/maven/bin/mvn -B -DskipTests clean package'
+//             }
+//         }
+//         stage('Test') {
+//             steps {
+//                 sh '/opt/maven/bin/mvn test'
+//             }
+//             post {
+//                 always {
+//                     junit 'target/surefire-reports/*.xml'
+//                 }
+//             }
+//         }
+//         stage('Deliver') {
+//             steps {
+//                 sh './jenkins/scripts/deliver.sh'
+//             }
+//         }
+//     }
+// }
+
 pipeline {
     agent any
     stages {
         stage('Build') {
             steps {
-                sh '/opt/maven/bin/mvn -B -DskipTests clean package'
+                sh 'mvn -B -DskipTests clean package'
             }
         }
         stage('Test') {
             steps {
-                sh '/opt/maven/bin/mvn test'
+                sh 'mvn test'
             }
             post {
                 always {
@@ -18,7 +44,11 @@ pipeline {
         }
         stage('Deliver') {
             steps {
-                sh './jenkins/scripts/deliver.sh'
+                script {
+                    def jarName = sh(script: "mvn -q -DforceStdout help:evaluate -Dexpression=project.build.finalName", returnStdout: true).trim()
+                    sh "ls -lah target/"  // Debugging step
+                    sh "java -jar target/${jarName}.jar"
+                }
             }
         }
     }
